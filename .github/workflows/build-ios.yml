@@ -35,12 +35,21 @@ jobs:
       - name: Build Unsigned IPA
         working-directory: ./ios/App
         run: |
-          xcodebuild -project App.xcodeproj \
+          if [ -d "App.xcworkspace" ]; then
+            BUILD_TARGET="-workspace App.xcworkspace"
+          else
+            BUILD_TARGET="-project App.xcodeproj"
+          fi
+
+          xcodebuild $BUILD_TARGET \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
             -archivePath $PWD/build/App.xcarchive \
-            archive CODE_SIGNING_ALLOWED=NO
+            SWIFT_VERSION=5.0 \
+            ENABLE_USER_SCRIPT_SANDBOXING=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            archive
 
           mkdir -p Payload
           cp -r $PWD/build/App.xcarchive/Products/Applications/App.app Payload/
