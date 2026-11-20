@@ -1,0 +1,20 @@
+{
+  "appId": "com.yourname.x86playground",
+  "appName": "x86 Playground",
+  "webDir": "dist",
+  "server": {
+    "url": "https://halb.it",
+    "allowNavigation": ["x64.halb.it"]
+  },
+  "plugins": {
+    "CapacitorCookies": {
+      "enabled": true
+    }
+  },
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "allowsLinkPreview": false
+  }
+}
+

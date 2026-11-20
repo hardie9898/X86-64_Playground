@@ -1,0 +1,53 @@
+name: Build Fullscreen iOS IPA
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Your Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies & Build WebDir
+        run: |
+          npm install
+          npm run build
+          npx cap add ios
+          npx cap sync ios
+
+      - name: Force Fullscreen & Landscape Only in Info.plist
+        working-directory: ./ios/App/App
+        run: |
+          /usr/libexec/PlistBuddy -c "Add :UIStatusBarHidden bool true" Info.plist || /usr/libexec/PlistBuddy -c "Set :UIStatusBarHidden true" Info.plist
+          /usr/libexec/PlistBuddy -c "Add :UIViewControllerBasedStatusBarAppearance bool false" Info.plist || /usr/libexec/PlistBuddy -c "Set :UIViewControllerBasedStatusBarAppearance false" Info.plist
+          /usr/libexec/PlistBuddy -c "Add :UIRequiresFullScreen bool true" Info.plist || /usr/libexec/PlistBuddy -c "Set :UIRequiresFullScreen true" Info.plist
+          /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations" Info.plist || true
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations array" Info.plist
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:0 string UIInterfaceOrientationLandscapeLeft" Info.plist
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:1 string UIInterfaceOrientationLandscapeRight" Info.plist
+
+      - name: Build Unsigned IPA
+        working-directory: ./ios/App
+        run: |
+          xcodebuild -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $PWD/build/App.xcarchive \
+            archive CODE_SIGNING_ALLOWED=NO
+
+          mkdir -p Payload
+          cp -r $PWD/build/App.xcarchive/Products/Applications/App.app Payload/
+          zip -r x86-playground.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: x86-playground-ipa
+          path: ./ios/App/x86-playground.ipa
