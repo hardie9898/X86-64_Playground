@@ -21,6 +21,45 @@ jobs:
           npx cap add ios
           npx cap sync ios
 
+      - name: Keep new-window links inside WKWebView
+        run: |
+          python3 -c '
+          from pathlib import Path
+          p = Path("ios/App/App/AppDelegate.swift")
+          text = p.read_text()
+          if "PopupInterceptor" not in text:
+              text = text.replace("import Capacitor", "import Capacitor\nimport WebKit", 1)
+              text = text.replace(
+                  "var window: UIWindow?",
+                  "var window: UIWindow?\n  private let popupInterceptor = PopupInterceptor()",
+                  1
+              )
+              text = text.replace(
+                  "return true\n  }",
+                  "if let bridgeVC = window?.rootViewController as? CAPBridgeViewController {\n      bridgeVC.webView?.uiDelegate = popupInterceptor\n    }\n    return true\n  }",
+                  1
+              )
+              text += """
+
+          private class PopupInterceptor: NSObject, WKUIDelegate {
+            func webView(
+              _ webView: WKWebView,
+              createWebViewWith configuration: WKWebViewConfiguration,
+              for navigationAction: WKNavigationAction,
+              windowFeatures: WKWindowFeatures
+            ) -> WKWebView? {
+              if navigationAction.targetFrame == nil || !(navigationAction.targetFrame!.isMainFrame) {
+                if let url = navigationAction.request.url {
+                  webView.load(URLRequest(url: url))
+                }
+              }
+              return nil
+            }
+          }
+          """
+              p.write_text(text)
+          '
+
       - name: Force Fullscreen & Landscape Only in Info.plist
         working-directory: ./ios/App/App
         run: |
