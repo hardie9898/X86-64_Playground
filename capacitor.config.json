@@ -3,8 +3,9 @@
   "appName": "x86 Playground",
   "webDir": "dist",
   "server": {
-    "url": "https://x64.halb.it",
+    "url": "https://app.x64.halb.it/",
     "allowNavigation": [
+      "app.x64.halb.it",
       "x64.halb.it"
     ]
   },
