@@ -3,8 +3,10 @@
   "appName": "x86 Playground",
   "webDir": "dist",
   "server": {
-    "url": "https://halb.it",
-    "allowNavigation": ["x64.halb.it"]
+    "url": "https://x64.halb.it",
+    "allowNavigation": [
+      "x64.halb.it"
+    ]
   },
   "plugins": {
     "CapacitorCookies": {
@@ -13,8 +15,7 @@
   },
   "ios": {
     "contentInset": "never",
-    "scrollEnabled": false,
+    "scrollEnabled": true,
     "allowsLinkPreview": false
   }
 }
-
